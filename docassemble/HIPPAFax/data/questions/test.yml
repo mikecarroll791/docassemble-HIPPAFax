@@ -1,0 +1,461 @@
+# Use this for the HIPAA form questions
+---
+objects:
+  - doc_type: DAList
+  - studentattorney: Individual
+  - client: Individual
+  - parent: Individual
+  - hospital: DAObject
+  - court: DAObject
+  - defender: DAObject
+  - accelerator: DAObject
+---
+mandatory: True
+code: |
+  if not user_logged_in():
+    require_login_screen
+  ok_to_finish = True
+  welcome
+  doc_select
+  studentattorney.name.first
+  client.name.first
+  client.dob
+  client.event
+  if "jdc" in doc_select.true_values():
+    parent.name.first
+  if "defenders" in doc_select.true_values():
+    hospital.name
+    court.name
+    defender.disclose
+  if "a2p"  in doc_select.true_values():
+    hospital.name
+    accelerator.beginning
+    accelerator.permission
+    client.initials
+  showed_forms
+  client.signature
+  if "jdc" in doc_select.true_values():
+    showed_forms
+    parent.signature
+  got_result
+  all_done
+  email_sent_ok
+  display_fax_results
+---
+event: require_login_screen
+question: |
+  You need to log in to finish this interview.
+buttons:
+  - Log in: leave
+    url: ${ url_of('login', next=interview_url()) }
+---
+question: |
+  Suffolk University HIPAA App
+subquestion: |
+  Welcome to the Suffolk University Law School HIPAA Release of Information App. This app will automatically email you a copy of the form, and provide you with the option of faxing the forms to supported hospitals.
+
+  [BR]These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
+  
+  [BR] PUT LANGUAGE HERE ABOUT LIABILITY OF USING THE APP AND A RELEASE OF CLAIMS
+  
+field: welcome
+---
+question: |
+  Which HIPAA form would you like to fill out?
+fields:
+  - no label: doc_select
+    datatype: checkboxes
+    choices:
+      - JDC HIPAA: jdc
+      - Defenders HIPAA: defenders
+      - Accelerator to Practice HIPAA: a2p
+    none of the above: False
+---
+question: |
+  Student Attorney Information
+fields: 
+  - Student Attorney First Name: studentattorney.name.first
+  - Student Attorney Last Name: studentattorney.name.last
+  - Student Attorney Email: studentattorney.email
+---
+question: |
+  Client Information
+fields:
+  - Client First Name: client.name.first
+  - Client Last Name: client.name.last
+  - Client Birthday: client.dob
+    datatype: date
+---
+#Preview Screen
+
+#review your document
+
+---
+question: |
+  Parent/Guardian Information
+fields:
+  - First name: parent.name.first
+  - Last name: parent.name.last
+---
+question: |
+  What date/event will this HIPAA form expire?
+fields:
+  - "Date / Event": client.event
+---
+question: |
+  Hospital Information
+fields:
+  - "Name of Hospital/Medical Institution": hospital.name
+  - Street: hospital.street
+  - City: hospital.city
+  - Zip Code: hospital.zip
+  - Hospital fax number: hospital.fax
+    required: False
+#defenders and accelarator
+---
+question: |
+  Court Information
+fields:
+  - Name of Court with pending case: court.name
+#defenders
+---
+question: |
+  Disclosure Authorization
+fields:
+  - "I authorize disclosure of (check one)": defender.disclose
+    datatype: checkboxes
+    choices:
+      - All Information: "all.info"
+      - Records: records_def
+    none of the above: False
+    required: False
+  - "If Records, please specify what the records relate to": relates_to
+    required: False
+#defenders, having some trouble with the "if, then" with this
+---
+question: |
+  Permission Authorization
+fields:
+  - "I give permission to disclose the following information": accelerator.permission
+    datatype: checkboxes
+    choices:
+      - "Records, opinions, reports, X-rays, lab test results, information relating to testing, diagnosis or treatment, and any other information or documents relating to services provided from dates provided": defender_records
+      - "Psychotherapy records, reports, notes, and information relating to diagnosis and treatment. (Note, Permission to release psychotherapy notes must be on a separate form.)": defender_psych
+      - "Any and all information and records about testing, diagnosis or treatment for HIV/ AIDS or sexually transmitted diseases it may contain.": defender_hiv
+      - "Any and all information and records about drug or alcohol use, testing, diagnosis or treatment it may contain, which are protected by federal confidentiality rules 42 CFR Part 2 (FEDERAL RULES PROHIBIT ANY FURTHER DISCLOSURE OF THIS INFORMATION UNLESS FURTHER DISCLOSURE IS EXPRESSLY PERMITTED OR WRITTEN CONSENT OF THE PERSON TO WHOM IT PERTAINS OR AS OTHERWISE PERMITTED BY 42 CFR PART 2.)": defender_abuse
+      - Other: defender_other
+    none of the above: False
+  - "If other, please specify": accel_other
+    required: False
+---
+question: |
+  If requesting Records, please provide the start date
+fields:
+  - Beginning date: accelerator.beginning
+    datatype: date
+#accelerator, having some trouble with the "if, then" with this
+---
+question: | 
+  Here is what you will sign.
+subquestion: |
+  % if "defenders" in doc_select.true_values():
+  [FILE Defenders_HIPAA_Redone.pdf, 150px]
+  % endif
+  
+  % if "jdc" in doc_select.true_values():
+  ${ pdf_concatenate(JDC_HIPAA_Improved['preview'], filename='JDC_HIPAA_Improved.pdf')}
+  % endif
+ 
+  % if "a2p" in doc_select.true_values():
+  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
+  % endif
+continue button field: showed_forms
+---
+question: |
+  Please sign your name below.
+  
+signature: client.signature
+under: |
+  ${ client }
+---
+question: | 
+  Here is what you will sign.
+subquestion: |
+  % if "defenders" in doc_select.true_values():
+  [FILE Defenders_HIPAA_Redone.pdf, 150px]
+  % endif
+  
+  % if "jdc" in doc_select.true_values():
+  [FILE JDC_HIPAA_Improved.pdf, 150px]
+  % endif
+ 
+  % if "a2p" in doc_select.true_values():
+  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
+  % endif
+continue button field: showed_forms_parent
+---
+question: |
+  Please sign parent name below.
+signature: parent.signature
+under: |
+  ${ client }
+---
+question: | 
+  Here is what you will sign.
+subquestion: |
+  % if "defenders" in doc_select.true_values():
+  [FILE Defenders_HIPAA_Redone.pdf, 150px]
+  % endif
+  
+  % if "jdc" in doc_select.true_values():
+  [FILE JDC_HIPAA_Improved.pdf, 150px]
+  % endif
+ 
+  % if "a2p" in doc_select.true_values():
+  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
+  % endif
+---
+question: |
+  Please sign your initials.
+signature: client.initials
+
+under: |
+  ${ client }
+#accelarator
+---
+comment: |
+  We can use reconsider here to make sure the selection is updated
+  if the person uses the back button
+reconsider: True
+code: |
+  # Docassemble stops running a code block after variable it's seeking is defined.
+  # So we start with a temp variable, and don't define our real variable name
+  # until we finish building it
+  form_to_use_temp = []
+  if "jdc" in doc_select.true_values():
+    form_to_use_temp.append(JDCHIPAA)
+  if "a2p" in doc_select.true_values():
+    form_to_use_temp.append(A2PHIPAA)
+  if "defenders" in doc_select.true_values():
+    form_to_use_temp.append(DEFHIPAA)
+  
+  form_to_use = form_to_use_temp
+---
+code: |
+  package_filename = space_to_underscore(str(client)+" HIPAA.pdf") 
+  email_package = pdf_concatenate(form_to_use, filename=package_filename)
+  email_sent_ok = send_email(to=studentattorney, template=notification,attachments=email_package)
+---
+template: notification
+subject: |
+  ${ client.name } HIPAA Form(s)
+content: |
+  Greetings, ${ studentattorney.name }!
+  
+  This is the HIPAA package for ${ client.name }.
+  
+  Have a nice day!  
+---
+mandatory: True
+question: |
+  This interview is all done.
+subquestion: |
+  To complete submission, [fax your HIPPA form]to the hospital.
+attachment code: JDC_HIPAA_Improved
+---
+attachment: 
+  filename: JDC_HIPPA_Improved.pdf
+  name: HIPPA Release Form
+  variable name: JDC_HIPAA_Improved
+  content: |
+    This is your HIPPA Release
+---
+variable name: hospitals
+use objects: True
+data:
+  Hospital 1:
+    phone_number:  555-555-5555
+    fax number:  855-656-9829
+    name: "Hospital 3"
+  Hospital 2:
+    phone_number: 555-555-5555
+    fax_number: 855-656-9829
+    name: "Hospital 2"
+  Hospital 3:
+    phone_number: 555-555-5555
+    fax_number: 855-656-9829
+    name: "Hospital 3"
+# hospitals["Mass General Hospital"]["fax_number"]
+---
+attachment:
+  variable name: JDCHIPAA
+  name: HIPAA JDC
+  filename: HIPAA JDC
+  pdf template file: JDC_HIPAA_Improved.pdf
+  fields:
+    - client.name: |
+        ${ client.name }
+    - studentattorney.name: |
+        ${ studentattorney.name }
+    - client.dob: |
+        ${ client.dob }
+    - todays.date: |
+        ${ today() }
+    - date_event: |
+        ${ client.event }
+    - client.signature: |
+        ${ client.signature }
+    - parent.name: |
+        ${ parent.name }
+    - parent.signature: |
+        ${ parent.signature }
+---
+attachment:
+  variable name: A2PHIPAA
+  name: HIPAA Accelerator
+  filename: HIPAA Accelerator
+  pdf template file: A2P_HIPAA.pdf
+  fields:
+    - Name Organization: |
+        ${ hospital.name }
+    - Address: |
+        ${ hospital.street } ${ hospital.city }, MA ${ hospital.zip }
+    - client.name: |
+        ${ client.name }
+    - studentattorney.name: |
+        ${ studentattorney.name }
+    - client.dob: |
+        ${ client.dob }
+    - todays.date: |
+        ${ today() }
+    - records.date: |
+        ${ accelerator.beginning }
+    - date_event: |
+        ${ client.event }
+    - client.signature: |
+        ${ client.signature }
+    - client.initial.records: |
+        if defender_records
+          ${ client.initials }
+    - client.initial.psych: |
+        if defender_psych
+          ${ client.initials }  
+    - client.initial.hiv: |
+        if defender_hiv
+          ${ client.initials }  
+    - client.initial.abuse: |
+        if defender_abuse
+          ${ client.initials }
+    - client.other: |
+        ${ accel_other }
+---
+attachment:
+  variable name: DEFHIPAA
+  name: HIPAA Defenders
+  filename: HIPAA Defenders
+  pdf template file: Defenders_HIPAA_Redone.pdf
+  fields:
+    - client.name: |
+        ${ client.name }
+    - studentattorney.name: |
+        ${ studentattorney.name }
+    - client.dob: |
+        ${ client.dob }
+    - todays.date: |
+        ${ today() }
+    - today.year: |
+        ${ format_date( today() + date_interval(years=1) ) }.
+    - court: |
+        ${ court.name }
+    - all.info: |
+          ${yesno(defender.disclose['all.info'])}
+    - records: |
+          ${yesno(defender.disclose['records_def'])}
+    - relates_to: |
+          ${ relates_to }
+    - client.signature: |
+          ${ client.signature }
+---
+attachment:
+  variable name: hospitals[i]["Attachment"]
+  name: ${ hospitals[i]["name"] } Cover Sheet
+  filename: ${ hospitals[i]["name"] } Cover Sheet
+  pdf template file: Fax_cover_sheet.pdf
+  fields:
+    - hospital_name: |
+        ${ hospitals[i]["name"] }
+    - student_attorney: |
+        ${ studentattorney.name }
+    - hospital_fax: |
+        ${ hospitals[i]["fax_number"] }
+    - from_fax: |
+        "555-555-5555"
+    - hospital_phone: |
+        ${ hospitals[i]["phone_number"] }
+    - from_phone: |
+        "555-555-5555"
+    - subject: |
+        HIPAA Request on Behalf of ${ client.name } 
+    - date: |
+        ${ today() }
+    - comment: |
+        ${ fax_comments }
+---
+mandatory: True
+question: |
+  This interview is all done.
+subquestion: |
+   To complete submission, [fax your HIPPA form]to the hospital.
+
+   [fax your HIPPA form]: ${ JDC_HIPAA_Improved.pdf.url_for(temporary=True) }
+attachment:
+  filename: JDC_HIPPA_Improved.pdf
+  name: HIPPA Release Form
+  variable name: JDC_HIPAA_Improved
+  content: |
+    This is your HIPPA Release
+---
+question: |
+  These are your fax results!
+subquestion: |
+  Hospital | Results
+  ---------|---------
+  % for result in fax_results:
+  ${ result[1] } | ${ result[0]}
+  % endfor
+event: display_fax_results    
+---
+mandatory: True
+code: |
+  got_result
+  all_done
+---
+#objects:
+#- JDC_HIPAA_Improved: DAStaticFile.using(filename="data/templates/JDC_HIPAA_Improved.pdf")       
+---
+objects:
+  - web: DAWeb.using(base_url='https://api.telnyx.com/v2', json_body=False, on_failure='raise')
+---
+code: |
+  data = {'media_url': "https://apps-dev.suffolklitlab.org/data/templates/JDC_HIPAA_Improved.pdf ",
+    'connection_id': '1584353915762115606', 
+    'to': '+14015233148', 
+    'from': '+18332979197'}
+  headers = {'Authorization': 'Bearer KEY0177F9770F9DA6B296C4098DDA8A8B99_EksqAtVPNAEp4XGMflLPuT',
+             'Content-Type': 'application/x-www-form-urlencoded'
+             }
+  try:
+    result = web.post('faxes',
+                      data=data,
+                      headers=headers, 
+                      json_body=False,
+                      )
+  except DAWebError as e:
+    result = e.response_json
+  got_result = True                    
+---
+question: |
+  This is the end screen
+subquestion: |
+  ${ result }
+event: all_done

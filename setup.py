@@ -45,7 +45,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.HIPPAFax',
       version='0.0.1',
       description=('A docassemble extension.'),
-      long_description='# docassemble.HIPPAFax\n\nA docassemble extension.\n\n## Author\n\nmcarroll11@su.suffolk.edu\n\n',
+      long_description='# docassemble.HIPPAFax\r\n\r\nA docassemble extension.\r\n\r\n## Author\r\n\r\nmcarroll11@su.suffolk.edu\r\n\r\n',
       long_description_content_type='text/markdown',
       author='',
       author_email='mcarroll11@su.suffolk.edu',
