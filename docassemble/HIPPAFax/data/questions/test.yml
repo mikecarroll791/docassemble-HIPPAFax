@@ -1,4 +1,3 @@
-# Use this for the HIPAA form questions
 ---
 objects:
   - doc_type: DAList
@@ -20,9 +19,6 @@ code: |
   studentattorney.name.first
   client.name.first
   client.dob
-  client.event
-  if "jdc" in doc_select.true_values():
-    parent.name.first
   if "defenders" in doc_select.true_values():
     hospital.name
     court.name
@@ -35,6 +31,8 @@ code: |
   showed_forms
   client.signature
   if "jdc" in doc_select.true_values():
+    hospital.name
+    parent.name.first
     showed_forms
     parent.signature
   got_result
@@ -52,13 +50,13 @@ buttons:
 question: |
   Suffolk University HIPAA App
 subquestion: |
-  Welcome to the Suffolk University Law School HIPAA Release of Information App. This app will automatically email you a copy of the form, and provide you with the option of faxing the forms to supported hospitals.
+  This interview will allow your clients to complete this form electronically, and will automatically email you a copy of the completed HIPAA form. When you are done, you can use this app to fax the form to supported hospitals.
 
+  [BR] Student Attorney's are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
+  
   [BR]These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
-  
-  [BR] PUT LANGUAGE HERE ABOUT LIABILITY OF USING THE APP AND A RELEASE OF CLAIMS
-  
 field: welcome
+  
 ---
 question: |
   Which HIPAA form would you like to fill out?
@@ -98,9 +96,9 @@ fields:
   - Last name: parent.name.last
 ---
 question: |
-  What date/event will this HIPAA form expire?
-fields:
-  - "Date / Event": client.event
+  End of Representation
+subquestion: |
+  Advise your client this form is valid through the end of representation. 
 ---
 question: |
   Hospital Information
@@ -155,65 +153,39 @@ fields:
     datatype: date
 #accelerator, having some trouble with the "if, then" with this
 ---
-question: | 
-  Here is what you will sign.
-subquestion: |
-  % if "defenders" in doc_select.true_values():
-  [FILE Defenders_HIPAA_Redone.pdf, 150px]
-  % endif
-  
-  % if "jdc" in doc_select.true_values():
-  ${ pdf_concatenate(JDC_HIPAA_Improved['preview'], filename='JDC_HIPAA_Improved.pdf')}
-  % endif
- 
-  % if "a2p" in doc_select.true_values():
-  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
-  % endif
-continue button field: showed_forms
+#code: |
+#form_to_sign = JDC_HIPAA_Improved
 ---
+id: preview screen
+need: form_to_use_temp
+continue button field: showed_forms
+question: | 
+  Below is a preview of your completed HIPAA Form. You may hit back to correct any errors.
+subquestion: |
+
+  Review the form for accuracy with your client. If your clinic supervisor has granted you permission, press continue to FAX the HIPAA form to the hospital you have selected.
+  
+   ${JDC_HIPAA_Improved}
+   
+mandatory: true  
+under: NOTE This APP is still in testing and will not actually fax this form. If you do not recieve an error message when you press continue, the fax function is working as it should. 
+---
+objects: 
+  - JDC_HIPAA_Improved: DADict
+---
+id: client signature
 question: |
-  Please sign your name below.
+  Please have ${ client.name.first } sign their name below.
   
 signature: client.signature
 under: |
   ${ client }
 ---
-question: | 
-  Here is what you will sign.
-subquestion: |
-  % if "defenders" in doc_select.true_values():
-  [FILE Defenders_HIPAA_Redone.pdf, 150px]
-  % endif
-  
-  % if "jdc" in doc_select.true_values():
-  [FILE JDC_HIPAA_Improved.pdf, 150px]
-  % endif
- 
-  % if "a2p" in doc_select.true_values():
-  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
-  % endif
-continue button field: showed_forms_parent
----
 question: |
-  Please sign parent name below.
+  Please have ${ parent.name } sign their name below.
 signature: parent.signature
 under: |
-  ${ client }
----
-question: | 
-  Here is what you will sign.
-subquestion: |
-  % if "defenders" in doc_select.true_values():
-  [FILE Defenders_HIPAA_Redone.pdf, 150px]
-  % endif
-  
-  % if "jdc" in doc_select.true_values():
-  [FILE JDC_HIPAA_Improved.pdf, 150px]
-  % endif
- 
-  % if "a2p" in doc_select.true_values():
-  [FILE Accelerator_to_Practice_HIPAA_Request_Redone.pdf, 150px]
-  % endif
+  ${ parent.name }
 ---
 question: |
   Please sign your initials.
@@ -233,7 +205,7 @@ code: |
   # until we finish building it
   form_to_use_temp = []
   if "jdc" in doc_select.true_values():
-    form_to_use_temp.append(JDCHIPAA)
+    form_to_use_temp.append(JDC_HIPAA_Improved)
   if "a2p" in doc_select.true_values():
     form_to_use_temp.append(A2PHIPAA)
   if "defenders" in doc_select.true_values():
@@ -260,15 +232,14 @@ mandatory: True
 question: |
   This interview is all done.
 subquestion: |
-  To complete submission, [fax your HIPPA form]to the hospital.
-attachment code: JDC_HIPAA_Improved
+#To complete submission, [fax your HIPPA form]to the hospital.
+#attachment code: JDC_HIPAA_Improved
 ---
-attachment: 
-  filename: JDC_HIPPA_Improved.pdf
-  name: HIPPA Release Form
-  variable name: JDC_HIPAA_Improved
-  content: |
-    This is your HIPPA Release
+#id: final attachment
+#attachment: 
+#- name: HIPPA Release Form
+    #variable name: JDC_HIPAA_Improved
+    #pdf template file: JDC_HIPAA_Improved.pdf
 ---
 variable name: hospitals
 use objects: True
@@ -288,7 +259,7 @@ data:
 # hospitals["Mass General Hospital"]["fax_number"]
 ---
 attachment:
-  variable name: JDCHIPAA
+  variable name: JDC_HIPAA_Improved
   name: HIPAA JDC
   filename: HIPAA JDC
   pdf template file: JDC_HIPAA_Improved.pdf
@@ -301,8 +272,6 @@ attachment:
         ${ client.dob }
     - todays.date: |
         ${ today() }
-    - date_event: |
-        ${ client.event }
     - client.signature: |
         ${ client.signature }
     - parent.name: |
@@ -405,15 +374,13 @@ mandatory: True
 question: |
   This interview is all done.
 subquestion: |
-   To complete submission, [fax your HIPPA form]to the hospital.
+#To complete submission, [fax your HIPPA form]to the hospital.
 
-   [fax your HIPPA form]: ${ JDC_HIPAA_Improved.pdf.url_for(temporary=True) }
-attachment:
-  filename: JDC_HIPPA_Improved.pdf
-  name: HIPPA Release Form
-  variable name: JDC_HIPAA_Improved
-  content: |
-    This is your HIPPA Release
+#[fax your HIPPA form]: ${ JDC_HIPAA_Improved.pdf.url_for(temporary=True) }
+#attachment:
+#filename: JDC_HIPPA_Improved.pdf
+#name: HIPPA Release Form
+#variable name: JDC_HIPAA_Improved
 ---
 question: |
   These are your fax results!
@@ -457,5 +424,8 @@ code: |
 question: |
   This is the end screen
 subquestion: |
+
+  **Below is the response you receieved from the FAX API. "Fax Status:  Queued" indicates the request was successful and the app is working properly**
+  
   ${ result }
 event: all_done
