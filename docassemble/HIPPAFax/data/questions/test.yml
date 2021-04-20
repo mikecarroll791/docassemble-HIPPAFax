@@ -95,7 +95,12 @@ code: |
   basic_questions_signature_flow = False
   client_signature
   parent_signature
-  JDC_HIPAA_Improved_download
+  #go_to_fax
+  hospital.name
+  got_result
+  all_done
+  display_fax_results
+  #JDC_HIPAA_Improved_download
 ---
 id: basic questions intro screen
 decoration: form-lineal
@@ -235,23 +240,24 @@ review:
       **Client Signature**:
       ${ client.signature }
 ---
-id: download JDC_HIPAA_Improved
-event: JDC_HIPAA_Improved_download
-question: |
-  Your form is ready to download and fax.
-subquestion: |
+#id: download JDC_HIPAA_Improved
+#event: JDC_HIPAA_Improved_download
+#continue button field: go_to_fax
+#question: |
+  #Your form is ready to download and fax.
+#subquestion: |
   
-  Thank you ${ studentattorney.name.first }. Your form is ready to download and fax to the hospital.
+  #Thank you ${ studentattorney.name.first }. Your form is ready to download and fax to the hospital.
 
-  View, download and send your form below. Click the "Make changes" button to fix any mistakes.
+  #View, download and send your form below. Click the "Make changes" button to fix any mistakes.
 
-  ${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
+  #${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
 
-  ${ al_user_bundle.download_list_html() }
+  #${ al_user_bundle.download_list_html() }
 
-  ${ al_user_bundle.send_button_html() }
+  #${ al_user_bundle.send_button_html() }
   
-progress: 100
+#progress: 90
 ---
 objects:
   - JDC_HIPAA_Improved_attachment: ALDocument.using(title="This is the intro", filename="JDC_HIPAA_Improved.pdf", enabled=True, has_addendum=False)
@@ -284,4 +290,51 @@ metadata:
     - studentattorney
     - developer
     - admin
+---
+objects:
+  - web: DAWeb.using(base_url='https://api.telnyx.com/v2', json_body=False, on_failure='raise')
+---
+code: |
+  data = {'media_url': "https://apps-dev.suffolklitlab.org/data/templates/JDC_HIPAA_Improved.pdf ",
+    'connection_id': '1584353915762115606', 
+    'to': 'hospital.fax', 
+    'from': '+18332979197'}
+  headers = {'Authorization': 'Bearer KEY0177F9770F9DA6B296C4098DDA8A8B99_EksqAtVPNAEp4XGMflLPuT',
+             'Content-Type': 'application/x-www-form-urlencoded'
+             }
+  try:
+    result = web.post('faxes',
+                      data=data,
+                      headers=headers, 
+                      json_body=False,
+                      )
+  except DAWebError as e:
+    result = e.response_json
+  got_result = True                    
+---
+question: |
+  This is the end screen
+subquestion: |
+
+  **Below is the response you receieved from the FAX API. "Fax Status:  Queued" indicates the request was successful and the app is working properly**
+  
+  ${ result }
+event: all_done
+---
+question: |
+  Hospital Information
+fields:
+  - Name of Hospital/Medical Institution: hospital.name
+  - Street: hospital.street
+  - City: hospital.city
+  - Zip Code: hospital.zip
+  - Hospital fax number: hospital.fax
+---
+continue button field: got_result
+question: |
+  Your Forms are ready to fax.
+subquestion: |
+  When you are ready to Fax them, press
+  Continue. 
+  **WARNING** pressing continue will send the fax to the phone number you entered as the hospital phone number. Verify the accuracy of all information entered before proceeding.
 ---
