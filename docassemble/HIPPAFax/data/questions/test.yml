@@ -18,6 +18,13 @@ metadata:
   tags:
     - HE-00-00-00-00
 ---
+code: |
+  al_form_type = 'existing_case'
+---
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[Authorization_For_Representation_attachment], filename="Authorization_For_Representation.pdf", title="All forms to download for your records")
+  - al_court_bundle: ALDocumentBundle.using(elements=[Authorization_For_Representation_attachment], filename="Authorization_For_Representation.pdf", title="All forms to download for your records")
+---
 mandatory: True
 comment: |
   This contains metadata that will not be overwritten if this YAML file is included in another
@@ -91,11 +98,11 @@ code: |
   parent.name.first
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
-  JDC_HIPAA_Improved_preview_question
+  #JDC_HIPAA_Improved_preview_question
   basic_questions_signature_flow = False
   client_signature
   parent_signature
-  #go_to_fax
+  go_to_fax
   hospital.name
   got_result
   all_done
@@ -189,21 +196,21 @@ fields:
   - First name: parent.name.first
   - Last name: parent.name.last
 ---
-id: preview JDC_HIPAA_Improved
-question: |
-  Preview your form before you sign it
-subquestion: |
-  Here is a preview of the form you will sign on the next page.   
+#id: preview JDC_HIPAA_Improved
+#question: |
+  #Preview your form before you sign it
+#subquestion: |
+  #Here is a preview of the form you will sign on the next page.   
   
-  ${ al_user_bundle.as_pdf(key='preview') }
+  #${ al_user_bundle.as_pdf(key='preview') }
 
-  Click the image to open it in a new tab. Click the "Make changes" button
-  to edit your answers.
+  #Click the image to open it in a new tab. Click the "Make changes" button
+  #to edit your answers.
 
-  ${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
+  #${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
   
-  Remember to come back to this window to continue and sign your form.
-continue button field: JDC_HIPAA_Improved_preview_question    
+  #Remember to come back to this window to continue and sign your form.
+#continue button field: JDC_HIPAA_Improved_preview_question    
 ---
 id: client signature
 question: |
@@ -267,7 +274,7 @@ objects:
   - al_court_bundle: ALDocumentBundle.using(elements=[JDC_HIPAA_Improved_attachment], filename="JDC_HIPAA_Improved.pdf", title="All forms to download for your records")
 ---
 attachment:
-  variable name: JDC_HIPAA_Improved_attachment[i]
+  variable name: JDC_HIPAA_Improved_attachment
   name: JDC_HIPAA_Improved_attachment
   filename: JDC_HIPAA_Improved
   skip undefined: True
@@ -283,6 +290,32 @@ attachment:
       - "todays.date": ${ today() }
       # It's a signature: test which file version this is; leave empty unless it's the final version)
       - "client.signature": ${ client.signature }
+---
+attachment:
+  variable name: Authorization_For_Representation_attachment[i]
+  name: Authorization_For_Representation_attachment
+  filename: Authorization_For_Representation
+  skip undefined: True
+  pdf template file: Authorization_For_Representation.pdf
+  fields:
+      - "client.name": ${ client.name }
+      - "client.name": ${ client.name }
+      - "client.address.street": ${ client.address.street }
+      - "client.address.city": ${ client.address.city }
+      - "client.address.zip": ${ client.address.zip }
+      - "client.address.state": ${ client.address.state }
+      - "docket.numer.1": ${ docket.numer.one }
+      - "docket.number.2": ${ docket.number.two }
+      - "docket.number.3": ${ docket.number.three }
+      - "docket.number.4": ${ docket.number.four }
+      - "school_case": ${ school_case }
+      - "todays.date": ${ today() }
+      - "todays.date": ${ today() }
+      - "todays.date": ${ today() }
+      - "todays.date": ${ today() }
+      - "studentattorney.signature": ${ studentattorney.signature }
+      - "parent.signature": ${ parent.signature }
+      - "supervisor.signature": ${ supervisor.signature }
 ---
 metadata:
   sessions are unique: True
@@ -341,3 +374,34 @@ subquestion: |
   Continue. 
   **WARNING** pressing continue will send the fax to the phone number you entered as the hospital phone number. Verify the accuracy of all information entered before proceeding.
 ---
+mandatory: True
+question: Your document is ready.
+email template: hello_email
+email address default: |
+  ${ user_email }
+attachment:
+  - name: A hello world document
+    filename: Hello_World
+    description: |
+      A document with a classic message
+    content: |
+      Hello, world!
+    valid formats:
+      - pdf
+      - docx
+always include editable files: True
+---
+template: hello_email
+subject: |
+  Your hello world document
+content: |
+  Dear sir or madam,
+
+  Your hello world document is attached hereto for your perusal.
+---
+mandatory: True
+question: |
+  Here are your documents!
+attachment code: |
+  [JDC_HIPAA_Improved_attachment] 
+continue button field: go_to_fax
