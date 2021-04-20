@@ -38,7 +38,7 @@ code: |
       ],
       "categories": [
         "HE-00-00-00-00",
-      ],
+      ],        
       "logic block variable": "interview_order_JDC_HIPAA_Improved",
       "attachment block variable": "JDC_HIPAA_Improved_attachment",
       "typical role": "unknown",
@@ -64,7 +64,7 @@ id: interview_order_JDC_HIPAA_Improved
 code: |
   # Set the allowed courts for this interview
   al_intro_screen = False
-  users.there_is_another= False
+  users.there_is_another= False 
   allowed_courts = interview_metadata["JDC_HIPAA_Improved"]["allowed courts"]
   nav.set_section('review_JDC_HIPAA_Improved')
   user_role = 'defendant'
@@ -88,10 +88,10 @@ code: |
   studentattorney.name.first
   advise_client
   client.name.first
+  parent.name.first
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
   JDC_HIPAA_Improved_preview_question
-  parent.name.first
   basic_questions_signature_flow = False
   client_signature
   parent_signature
@@ -105,14 +105,14 @@ question: |
 subquestion: |
 
   The Court Forms Online Project can help you complete and fax your client's HIPAA form in 3 steps:
-
-  Step 1. Answer questions that will fill in the form for you.
-  Step 2. Preview the completed form.
+  
+  Step 1. Answer questions that will fill in the form for you.  
+  Step 2. Preview the completed form.  
   Step 3. Fax the forms to the hospital using this secure website and save copies
-  for yourself for later reference.
-
+  for yourself for later reference.  
+  
   Tap the {green words} in any screen for a definition or more information.
-
+  
   % if chat_partners_available().help:
   Live help is currently available in this interview. Click the speech bubble
   (:comment-alt:) in the navigation bar to connect to a live advocate for help.
@@ -120,52 +120,51 @@ subquestion: |
 fields:
   - To continue, you must accept our [terms of use](https://courtformsonline.org/privacy/): acknowledged_information_use
     datatype: checkboxes
-    none of the above: False
+    none of the above: False    
     minlength: 1
     choices:
       - I accept the terms of use.
     validation messages:
       minlength: |
-        You cannot continue unless you agree to the terms of use.
+        You cannot continue unless you agree to the terms of use.   
 terms:
   green words: |
     Green words are legal terms or a short way of referring to something that needs more explanation. The definition or explanation pops up when you tap the green words.
 right: |
   % if user_has_saved_answers:
   ${fa_icon("bell", color="primary", size="sm")}
-  Saved answers available!
-
+  Saved answers available!  
+  
   ${action_button_html(url_action('load_answer'), icon="folder-open", label=word("View answers"), size="sm" )}
-  % endif
+  % endif    
 ---
 id: Screen Suffolk University HIPAA App
 question: |
   Screen Suffolk University HIPAA App
 subquestion: |
-  This interview will allow your clients to complete this form electronically, and will automatically email you a copy of the completed HIPAA form. When you are done, you can use this app to fax the form to supported hospitals.
-
+  This interview will allow your clients to complete this form electronically, and will automatically email you a copy of the completed HIPAA form. When you are done, you can use this app to fax the form to supported hospitals. 
+  
   Student Attorney’s are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
-
-
+  
+  
   These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
 mandatory: True
 continue button field: Screen_Suffolk_University_HIPAA_App
 ---
 question: |
   Student Attorney Information
-fields:
+fields: 
   - Student Attorney First Name: studentattorney.name.first
   - Student Attorney Last Name: studentattorney.name.last
-  - Student Attorney Email: studentattorney.email
 ---
-objects:
+objects: 
   - studentattorney: Individual
 ---
-id: end of representation
+id: end of representation 
 question: |
   This form is effective through the end of representation.
 subquestion: |
-  Advise your client this form is valid through the end of representation.
+  Advise your client this form is valid through the end of representation. 
 mandatory: True
 field: advise_client
 ---
@@ -189,17 +188,17 @@ id: preview JDC_HIPAA_Improved
 question: |
   Preview your form before you sign it
 subquestion: |
-  Here is a preview of the form you will sign on the next page.
-
+  Here is a preview of the form you will sign on the next page.   
+  
   ${ al_user_bundle.as_pdf(key='preview') }
 
   Click the image to open it in a new tab. Click the "Make changes" button
   to edit your answers.
 
   ${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
-
+  
   Remember to come back to this window to continue and sign your form.
-continue button field: JDC_HIPAA_Improved_preview_question
+continue button field: JDC_HIPAA_Improved_preview_question    
 ---
 id: client signature
 question: |
@@ -223,7 +222,7 @@ review:
     button: |
       **Client name full**:
       ${ client.name }
-  - Edit: client_dob
+  - Edit: client.dob
     button: |
       **Client dob**:
       ${ client.dob }
@@ -241,7 +240,7 @@ event: JDC_HIPAA_Improved_download
 question: |
   Your form is ready to download and fax.
 subquestion: |
-
+  
   Thank you ${ studentattorney.name.first }. Your form is ready to download and fax to the hospital.
 
   View, download and send your form below. Click the "Make changes" button to fix any mistakes.
@@ -251,7 +250,7 @@ subquestion: |
   ${ al_user_bundle.download_list_html() }
 
   ${ al_user_bundle.send_button_html() }
-
+  
 progress: 100
 ---
 objects:
@@ -268,16 +267,16 @@ attachment:
   skip undefined: True
   pdf template file: JDC_HIPAA_Improved.pdf
   fields:
-      - "parent_signature": ${ parent_signature if i == 'final' else '' }
+      - "parent.signature": ${ parent.signature }
       - "client.name": ${ client.name }
-      - "parents.name": ${ parents.name }
+      - "parent.name": ${ parent.name }
       - "studentattorney.name": ${ studentattorney.name }
-      - "client_dob": ${ client_dob }
-      - "todays.date": ${ todays.date }
-      - "todays.date": ${ todays.date }
-      - "todays.date": ${ todays.date }
+      - "client.dob": ${ client.dob }
+      - "todays.date": ${ today() }
+      - "todays.date": ${ today() }
+      - "todays.date": ${ today() }
       # It's a signature: test which file version this is; leave empty unless it's the final version)
-      - "client_signature": ${ client_signature if i == 'final' else '' }
+      - "client.signature": ${ client.signature }
 ---
 metadata:
   sessions are unique: True
