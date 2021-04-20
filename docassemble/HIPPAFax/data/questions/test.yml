@@ -292,7 +292,7 @@ attachment:
       - "client.signature": ${ client.signature }
 ---
 attachment:
-  variable name: Authorization_For_Representation_attachment[i]
+  variable name: Authorization_For_Representation_attachment
   name: Authorization_For_Representation_attachment
   filename: Authorization_For_Representation
   skip undefined: True
@@ -403,5 +403,5 @@ mandatory: True
 question: |
   Here are your documents!
 attachment code: |
-  [JDC_HIPAA_Improved_attachment] 
+  [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
 continue button field: go_to_fax
