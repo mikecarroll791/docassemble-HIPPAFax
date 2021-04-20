@@ -330,6 +330,9 @@ fields:
   - Zip Code: hospital.zip
   - Hospital fax number: hospital.fax
 ---
+code: |
+  phone_number_in_e164(hospital.fax)
+---
 continue button field: got_result
 question: |
   Your Forms are ready to fax.
