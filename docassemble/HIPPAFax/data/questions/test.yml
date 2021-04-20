@@ -5,77 +5,171 @@ objects:
   - client: Individual
   - parent: Individual
   - hospital: DAObject
-  - court: DAObject
-  - defender: DAObject
-  - accelerator: DAObject
+---
+include:
+  - docassemble.AssemblyLine:al_package.yml
+  - docassemble.MassAccess:massaccess.yml
+---
+metadata:
+  title: |
+    Suffolk Juvenile Defenders
+  short title: |
+    HIPAA Intake App
+  tags:
+    - HE-00-00-00-00
 ---
 mandatory: True
+comment: |
+  This contains metadata that will not be overwritten if this YAML file is included in another
+  file. Each file gets its own key in the interview_metadata dictionary.
+  Most keys are not currently used at runtime, other than "allowed courts".
 code: |
-  if not user_logged_in():
-    require_login_screen
-  ok_to_finish = True
-  welcome
-  doc_select
+  interview_metadata
+  if not defined("interview_metadata['JDC_HIPAA_Improved']"):
+    interview_metadata.initializeObject("JDC_HIPAA_Improved")
+    interview_metadata["JDC_HIPAA_Improved"].update({
+      "al_weaver_version": "0.81",
+      "generated on": "2021-04-19",
+      "title": "Suffolk Juvenile Defenders",
+      "short title": "HIPAA Intake App",
+      "description": "This is the intro",
+      "original_form": "",
+      "allowed courts": [
+      ],
+      "categories": [
+        "HE-00-00-00-00",
+      ],
+      "logic block variable": "interview_order_JDC_HIPAA_Improved",
+      "attachment block variable": "JDC_HIPAA_Improved_attachment",
+      "typical role": "unknown",
+    })
+---
+code: |
+  interview_short_title = "Sign/Submit your client\'s HIPAA release  form"
+---
+code: |
+  al_form_type = 'other_form'
+---
+objects:
+  - parents: ALPeopleList.using(ask_number=True,target_number=1)
+  - users: ALPeopleList
+---
+sections:
+  - review_JDC_HIPAA_Improved: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_JDC_HIPAA_Improved
+code: |
+  # Set the allowed courts for this interview
+  al_intro_screen = False
+  users.there_is_another= False
+  allowed_courts = interview_metadata["JDC_HIPAA_Improved"]["allowed courts"]
+  nav.set_section('review_JDC_HIPAA_Improved')
+  user_role = 'defendant'
+  user = False
+  users[0].address.state = False
+  users[0].address.adress = False
+  users[0].address.city = False
+  users[0].address.zip = False
+  Screen_Suffolk_University_HIPAA_App
+  advise_client
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  JDC_HIPAA_Improved_intro
+  Screen_Suffolk_University_HIPAA_App
+  signature_date
   studentattorney.name.first
+  advise_client
   client.name.first
-  client.dob
-  if "defenders" in doc_select.true_values():
-    hospital.name
-    court.name
-    defender.disclose
-  if "a2p"  in doc_select.true_values():
-    hospital.name
-    accelerator.beginning
-    accelerator.permission
-    client.initials
-  showed_forms
-  client.signature
-  if "jdc" in doc_select.true_values():
-    hospital.name
-    parent.name.first
-    showed_forms
-    parent.signature
-  got_result
-  all_done
-  email_sent_ok
-  display_fax_results
+  # Save anonymized interview statistics (customize the saved data below)
+  store_variables_snapshot(data={'zip': users[0].address.zip})
+  JDC_HIPAA_Improved_preview_question
+  parent.name.first
+  basic_questions_signature_flow = False
+  client_signature
+  parent_signature
+  JDC_HIPAA_Improved_download
 ---
-event: require_login_screen
+id: basic questions intro screen
+decoration: form-lineal
+continue button field: JDC_HIPAA_Improved_intro
 question: |
-  You need to log in to finish this interview.
-buttons:
-  - Log in: leave
-    url: ${ url_of('login', next=interview_url()) }
+  Sign/Submit Your Client’s HIPAA Release Form: Court Forms Online
+subquestion: |
+
+  The Court Forms Online Project can help you complete and fax your client's HIPAA form in 3 steps:
+
+  Step 1. Answer questions that will fill in the form for you.
+  Step 2. Preview the completed form.
+  Step 3. Fax the forms to the hospital using this secure website and save copies
+  for yourself for later reference.
+
+  Tap the {green words} in any screen for a definition or more information.
+
+  % if chat_partners_available().help:
+  Live help is currently available in this interview. Click the speech bubble
+  (:comment-alt:) in the navigation bar to connect to a live advocate for help.
+  % endif
+fields:
+  - To continue, you must accept our [terms of use](https://courtformsonline.org/privacy/): acknowledged_information_use
+    datatype: checkboxes
+    none of the above: False
+    minlength: 1
+    choices:
+      - I accept the terms of use.
+    validation messages:
+      minlength: |
+        You cannot continue unless you agree to the terms of use.
+terms:
+  green words: |
+    Green words are legal terms or a short way of referring to something that needs more explanation. The definition or explanation pops up when you tap the green words.
+right: |
+  % if user_has_saved_answers:
+  ${fa_icon("bell", color="primary", size="sm")}
+  Saved answers available!
+
+  ${action_button_html(url_action('load_answer'), icon="folder-open", label=word("View answers"), size="sm" )}
+  % endif
 ---
+id: Screen Suffolk University HIPAA App
 question: |
-  Suffolk University HIPAA App
+  Screen Suffolk University HIPAA App
 subquestion: |
   This interview will allow your clients to complete this form electronically, and will automatically email you a copy of the completed HIPAA form. When you are done, you can use this app to fax the form to supported hospitals.
 
-  [BR] Student Attorney's are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
-  
-  [BR]These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
-field: welcome
-  
----
-question: |
-  Which HIPAA form would you like to fill out?
-fields:
-  - no label: doc_select
-    datatype: checkboxes
-    choices:
-      - JDC HIPAA: jdc
-      - Defenders HIPAA: defenders
-      - Accelerator to Practice HIPAA: a2p
-    none of the above: False
+  Student Attorney’s are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
+
+
+  These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
+mandatory: True
+continue button field: Screen_Suffolk_University_HIPAA_App
 ---
 question: |
   Student Attorney Information
-fields: 
+fields:
   - Student Attorney First Name: studentattorney.name.first
   - Student Attorney Last Name: studentattorney.name.last
   - Student Attorney Email: studentattorney.email
 ---
+objects:
+  - studentattorney: Individual
+---
+id: end of representation
+question: |
+  This form is effective through the end of representation.
+subquestion: |
+  Advise your client this form is valid through the end of representation.
+mandatory: True
+field: advise_client
+---
+id: client info
 question: |
   Client Information
 fields:
@@ -84,348 +178,111 @@ fields:
   - Client Birthday: client.dob
     datatype: date
 ---
-#Preview Screen
-
-#review your document
-
----
+id: Parent/Guardian info
 question: |
   Parent/Guardian Information
 fields:
   - First name: parent.name.first
   - Last name: parent.name.last
 ---
+id: preview JDC_HIPAA_Improved
 question: |
-  End of Representation
+  Preview your form before you sign it
 subquestion: |
-  Advise your client this form is valid through the end of representation. 
----
-question: |
-  Hospital Information
-fields:
-  - "Name of Hospital/Medical Institution": hospital.name
-  - Street: hospital.street
-  - City: hospital.city
-  - Zip Code: hospital.zip
-  - Hospital fax number: hospital.fax
-    required: False
-#defenders and accelarator
----
-question: |
-  Court Information
-fields:
-  - Name of Court with pending case: court.name
-#defenders
----
-question: |
-  Disclosure Authorization
-fields:
-  - "I authorize disclosure of (check one)": defender.disclose
-    datatype: checkboxes
-    choices:
-      - All Information: "all.info"
-      - Records: records_def
-    none of the above: False
-    required: False
-  - "If Records, please specify what the records relate to": relates_to
-    required: False
-#defenders, having some trouble with the "if, then" with this
----
-question: |
-  Permission Authorization
-fields:
-  - "I give permission to disclose the following information": accelerator.permission
-    datatype: checkboxes
-    choices:
-      - "Records, opinions, reports, X-rays, lab test results, information relating to testing, diagnosis or treatment, and any other information or documents relating to services provided from dates provided": defender_records
-      - "Psychotherapy records, reports, notes, and information relating to diagnosis and treatment. (Note, Permission to release psychotherapy notes must be on a separate form.)": defender_psych
-      - "Any and all information and records about testing, diagnosis or treatment for HIV/ AIDS or sexually transmitted diseases it may contain.": defender_hiv
-      - "Any and all information and records about drug or alcohol use, testing, diagnosis or treatment it may contain, which are protected by federal confidentiality rules 42 CFR Part 2 (FEDERAL RULES PROHIBIT ANY FURTHER DISCLOSURE OF THIS INFORMATION UNLESS FURTHER DISCLOSURE IS EXPRESSLY PERMITTED OR WRITTEN CONSENT OF THE PERSON TO WHOM IT PERTAINS OR AS OTHERWISE PERMITTED BY 42 CFR PART 2.)": defender_abuse
-      - Other: defender_other
-    none of the above: False
-  - "If other, please specify": accel_other
-    required: False
----
-question: |
-  If requesting Records, please provide the start date
-fields:
-  - Beginning date: accelerator.beginning
-    datatype: date
-#accelerator, having some trouble with the "if, then" with this
----
-#code: |
-#form_to_sign = JDC_HIPAA_Improved
----
-id: preview screen
-need: form_to_use_temp
-continue button field: showed_forms
-question: | 
-  Below is a preview of your completed HIPAA Form. You may hit back to correct any errors.
-subquestion: |
+  Here is a preview of the form you will sign on the next page.
 
-  Review the form for accuracy with your client. If your clinic supervisor has granted you permission, press continue to FAX the HIPAA form to the hospital you have selected.
-  
-   ${JDC_HIPAA_Improved}
-   
-mandatory: true  
-under: NOTE This APP is still in testing and will not actually fax this form. If you do not recieve an error message when you press continue, the fax function is working as it should. 
----
-objects: 
-  - JDC_HIPAA_Improved: DADict
+  ${ al_user_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Make changes" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
+
+  Remember to come back to this window to continue and sign your form.
+continue button field: JDC_HIPAA_Improved_preview_question
 ---
 id: client signature
 question: |
   Please have ${ client.name.first } sign their name below.
-  
-signature: client.signature
+signature: client_signature
 under: |
-  ${ client }
+  ${ client.name }
 ---
 question: |
-  Please have ${ parent.name } sign their name below.
-signature: parent.signature
+  Please have ${ parent.name.first } sign their name below.
+signature: parent_signature
 under: |
   ${ parent.name }
 ---
+id: JDC HIPAA Improved review screen
+event: review_JDC_HIPAA_Improved
 question: |
-  Please sign your initials.
-signature: client.initials
+  Review your answers
+review:
+  - Edit: client.name
+    button: |
+      **Client name full**:
+      ${ client.name }
+  - Edit: client_dob
+    button: |
+      **Client dob**:
+      ${ client.dob }
+  - Edit: todays.date
+    button: |
+      **Date of todays**:
+      ${ todays.date }
+  - Edit: client.signature
+    button: |
+      **Client Signature**:
+      ${ client.signature }
+---
+id: download JDC_HIPAA_Improved
+event: JDC_HIPAA_Improved_download
+question: |
+  Your form is ready to download and fax.
+subquestion: |
 
-under: |
-  ${ client }
-#accelarator
----
-comment: |
-  We can use reconsider here to make sure the selection is updated
-  if the person uses the back button
-reconsider: True
-code: |
-  # Docassemble stops running a code block after variable it's seeking is defined.
-  # So we start with a temp variable, and don't define our real variable name
-  # until we finish building it
-  form_to_use_temp = []
-  if "jdc" in doc_select.true_values():
-    form_to_use_temp.append(JDC_HIPAA_Improved)
-  if "a2p" in doc_select.true_values():
-    form_to_use_temp.append(A2PHIPAA)
-  if "defenders" in doc_select.true_values():
-    form_to_use_temp.append(DEFHIPAA)
-  
-  form_to_use = form_to_use_temp
----
-code: |
-  package_filename = space_to_underscore(str(client)+" HIPAA.pdf") 
-  email_package = pdf_concatenate(form_to_use, filename=package_filename)
-  email_sent_ok = send_email(to=studentattorney, template=notification,attachments=email_package)
----
-template: notification
-subject: |
-  ${ client.name } HIPAA Form(s)
-content: |
-  Greetings, ${ studentattorney.name }!
-  
-  This is the HIPAA package for ${ client.name }.
-  
-  Have a nice day!  
----
-mandatory: True
-question: |
-  This interview is all done.
-subquestion: |
-#To complete submission, [fax your HIPPA form]to the hospital.
-#attachment code: JDC_HIPAA_Improved
----
-#id: final attachment
-#attachment: 
-#- name: HIPPA Release Form
-    #variable name: JDC_HIPAA_Improved
-    #pdf template file: JDC_HIPAA_Improved.pdf
----
-variable name: hospitals
-use objects: True
-data:
-  Hospital 1:
-    phone_number:  555-555-5555
-    fax number:  855-656-9829
-    name: "Hospital 3"
-  Hospital 2:
-    phone_number: 555-555-5555
-    fax_number: 855-656-9829
-    name: "Hospital 2"
-  Hospital 3:
-    phone_number: 555-555-5555
-    fax_number: 855-656-9829
-    name: "Hospital 3"
-# hospitals["Mass General Hospital"]["fax_number"]
----
-attachment:
-  variable name: JDC_HIPAA_Improved
-  name: HIPAA JDC
-  filename: HIPAA JDC
-  pdf template file: JDC_HIPAA_Improved.pdf
-  fields:
-    - client.name: |
-        ${ client.name }
-    - studentattorney.name: |
-        ${ studentattorney.name }
-    - client.dob: |
-        ${ client.dob }
-    - todays.date: |
-        ${ today() }
-    - client.signature: |
-        ${ client.signature }
-    - parent.name: |
-        ${ parent.name }
-    - parent.signature: |
-        ${ parent.signature }
----
-attachment:
-  variable name: A2PHIPAA
-  name: HIPAA Accelerator
-  filename: HIPAA Accelerator
-  pdf template file: A2P_HIPAA.pdf
-  fields:
-    - Name Organization: |
-        ${ hospital.name }
-    - Address: |
-        ${ hospital.street } ${ hospital.city }, MA ${ hospital.zip }
-    - client.name: |
-        ${ client.name }
-    - studentattorney.name: |
-        ${ studentattorney.name }
-    - client.dob: |
-        ${ client.dob }
-    - todays.date: |
-        ${ today() }
-    - records.date: |
-        ${ accelerator.beginning }
-    - date_event: |
-        ${ client.event }
-    - client.signature: |
-        ${ client.signature }
-    - client.initial.records: |
-        if defender_records
-          ${ client.initials }
-    - client.initial.psych: |
-        if defender_psych
-          ${ client.initials }  
-    - client.initial.hiv: |
-        if defender_hiv
-          ${ client.initials }  
-    - client.initial.abuse: |
-        if defender_abuse
-          ${ client.initials }
-    - client.other: |
-        ${ accel_other }
----
-attachment:
-  variable name: DEFHIPAA
-  name: HIPAA Defenders
-  filename: HIPAA Defenders
-  pdf template file: Defenders_HIPAA_Redone.pdf
-  fields:
-    - client.name: |
-        ${ client.name }
-    - studentattorney.name: |
-        ${ studentattorney.name }
-    - client.dob: |
-        ${ client.dob }
-    - todays.date: |
-        ${ today() }
-    - today.year: |
-        ${ format_date( today() + date_interval(years=1) ) }.
-    - court: |
-        ${ court.name }
-    - all.info: |
-          ${yesno(defender.disclose['all.info'])}
-    - records: |
-          ${yesno(defender.disclose['records_def'])}
-    - relates_to: |
-          ${ relates_to }
-    - client.signature: |
-          ${ client.signature }
----
-attachment:
-  variable name: hospitals[i]["Attachment"]
-  name: ${ hospitals[i]["name"] } Cover Sheet
-  filename: ${ hospitals[i]["name"] } Cover Sheet
-  pdf template file: Fax_cover_sheet.pdf
-  fields:
-    - hospital_name: |
-        ${ hospitals[i]["name"] }
-    - student_attorney: |
-        ${ studentattorney.name }
-    - hospital_fax: |
-        ${ hospitals[i]["fax_number"] }
-    - from_fax: |
-        "555-555-5555"
-    - hospital_phone: |
-        ${ hospitals[i]["phone_number"] }
-    - from_phone: |
-        "555-555-5555"
-    - subject: |
-        HIPAA Request on Behalf of ${ client.name } 
-    - date: |
-        ${ today() }
-    - comment: |
-        ${ fax_comments }
----
-mandatory: True
-question: |
-  This interview is all done.
-subquestion: |
-#To complete submission, [fax your HIPPA form]to the hospital.
+  Thank you ${ studentattorney.name.first }. Your form is ready to download and fax to the hospital.
 
-#[fax your HIPPA form]: ${ JDC_HIPAA_Improved.pdf.url_for(temporary=True) }
-#attachment:
-#filename: JDC_HIPPA_Improved.pdf
-#name: HIPPA Release Form
-#variable name: JDC_HIPAA_Improved
----
-question: |
-  These are your fax results!
-subquestion: |
-  Hospital | Results
-  ---------|---------
-  % for result in fax_results:
-  ${ result[1] } | ${ result[0]}
-  % endfor
-event: display_fax_results    
----
-mandatory: True
-code: |
-  got_result
-  all_done
----
-#objects:
-#- JDC_HIPAA_Improved: DAStaticFile.using(filename="data/templates/JDC_HIPAA_Improved.pdf")       
+  View, download and send your form below. Click the "Make changes" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_" + interview_label + "'), label='Make changes', color='info') }
+
+  ${ al_user_bundle.download_list_html() }
+
+  ${ al_user_bundle.send_button_html() }
+
+progress: 100
 ---
 objects:
-  - web: DAWeb.using(base_url='https://api.telnyx.com/v2', json_body=False, on_failure='raise')
+  - JDC_HIPAA_Improved_attachment: ALDocument.using(title="This is the intro", filename="JDC_HIPAA_Improved.pdf", enabled=True, has_addendum=False)
 ---
-code: |
-  data = {'media_url': "https://apps-dev.suffolklitlab.org/data/templates/JDC_HIPAA_Improved.pdf ",
-    'connection_id': '1584353915762115606', 
-    'to': '+14015233148', 
-    'from': '+18332979197'}
-  headers = {'Authorization': 'Bearer KEY0177F9770F9DA6B296C4098DDA8A8B99_EksqAtVPNAEp4XGMflLPuT',
-             'Content-Type': 'application/x-www-form-urlencoded'
-             }
-  try:
-    result = web.post('faxes',
-                      data=data,
-                      headers=headers, 
-                      json_body=False,
-                      )
-  except DAWebError as e:
-    result = e.response_json
-  got_result = True                    
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[JDC_HIPAA_Improved_attachment], filename="JDC_HIPAA_Improved.pdf", title="All forms to download for your records")
+  - al_court_bundle: ALDocumentBundle.using(elements=[JDC_HIPAA_Improved_attachment], filename="JDC_HIPAA_Improved.pdf", title="All forms to download for your records")
 ---
-question: |
-  This is the end screen
-subquestion: |
-
-  **Below is the response you receieved from the FAX API. "Fax Status:  Queued" indicates the request was successful and the app is working properly**
-  
-  ${ result }
-event: all_done
+attachment:
+  variable name: JDC_HIPAA_Improved_attachment[i]
+  name: JDC_HIPAA_Improved_attachment
+  filename: JDC_HIPAA_Improved
+  skip undefined: True
+  pdf template file: JDC_HIPAA_Improved.pdf
+  fields:
+      - "parent_signature": ${ parent_signature if i == 'final' else '' }
+      - "client.name": ${ client.name }
+      - "parents.name": ${ parents.name }
+      - "studentattorney.name": ${ studentattorney.name }
+      - "client_dob": ${ client_dob }
+      - "todays.date": ${ todays.date }
+      - "todays.date": ${ todays.date }
+      - "todays.date": ${ todays.date }
+      # It's a signature: test which file version this is; leave empty unless it's the final version)
+      - "client_signature": ${ client_signature if i == 'final' else '' }
+---
+metadata:
+  sessions are unique: True
+  required privileges:
+    - studentattorney
+    - developer
+    - admin
+---
