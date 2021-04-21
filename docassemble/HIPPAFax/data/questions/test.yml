@@ -406,7 +406,12 @@ code: |
 question: |
   **WARNING:** You are about to send a fax. 
 subquestion: |
-  Your fax  will be sent to ${hospital.fax}. Click on the attached file and review the accuracy of all information before proceeding.
+  # Your fax will be sent to ${hospital.name} at:
+  *${hospital.fax}.*
+  
+  Click on the attached file and review the accuracy of all information before proceeding. 
+  
+  Click **SEND FAX** to fax ${client.name}'s HIPAA Release to ${hospital.name}
 
   ${fax_package}
 field: got_result
@@ -431,14 +436,6 @@ attachment:
       - pdf
       - docx
 always include editable files: True
----
-template: hello_email
-subject: |
-  Your hello world document
-content: |
-  Dear sir or madam,
-
-  Your hello world document is attached hereto for your perusal.
 ---
 mandatory: True
 question: |
