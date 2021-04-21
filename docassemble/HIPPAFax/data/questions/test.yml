@@ -375,8 +375,40 @@ attachment:
       - "todays.date": ${ today() }
       - "todays.date": ${ today() }
       - "todays.date": ${ today() }
-      # It's a signature: test which file version this is; leave empty unless it's the final version)
       - "client.signature": ${ client.signature }
+---
+attachment:
+  variable name: Notice_of_Appearance_and_Disclosure_attachment
+  name: Notice_of_Appearance_and_Disclosure_attachment
+  filename: Notice_of_Appearance_and_Disclosure
+  skip undefined: True
+  pdf template file: Notice_of_Appearance_and_Disclosure.pdf
+  fields:
+      - "client.name": ${ client.name }
+      - "client.name": ${ client.name }
+      - "studentattorney.name": ${ studentattorney.name }
+      - "todays.date": ${ today() }
+      - "client.signature": ${ client.signature }
+      - "studentattorney.signature": ${ studentattorney.signature }
+      - "supervisor.signature": ${ supervisor.signature }
+      
+---
+id: Appearance Disclosure
+question: |
+ S.J.C. RULE 3:03 DISCLOSURE
+subquestion: |
+  I understand that my counsel is a law student enrolled in the Juvenile Defenders Clinic, and further understand that another attorney will be appointed to me instead if I so desire. I authorize {studentattorney.name} and any successor student attorneys of the Suffolk University Law School Clinical Programs to represent me in the above-entitled case.
+continue button field: showed_disclosure
+fields:
+  - To continue, you must acknowledge client has reviewed this disclosure: acknowledged_disclosure
+    datatype: checkboxes
+    none of the above: False    
+    minlength: 1
+    choices:
+      - Client recieved disclosure
+    validation messages:
+      minlength: |
+        You cannot continue unless you acknowledge your client has acknowledged this disclousre   
 ---
 id: client address
 continue button field: client_address
