@@ -6,6 +6,7 @@ objects:
   - parent: Individual
   - hospital: DAObject
   - fax: Individual
+  - supervisor: Individual
 ---
 include:
   - docassemble.AssemblyLine:al_package.yml
@@ -94,6 +95,7 @@ code: |
   Screen_Suffolk_University_HIPAA_App
   signature_date
   studentattorney.name.first
+  supervisor.name.first
   advise_client
   client.name.first
   parent.name.first
@@ -101,8 +103,10 @@ code: |
   store_variables_snapshot(data={'zip': users[0].address.zip})
   #JDC_HIPAA_Improved_preview_question
   basic_questions_signature_flow = False
-  client_signature
-  parent_signature
+  client.signature
+  parent.signature
+  studentattorney.signature
+  supervisor.signature
   go_to_fax
   hospital.name
   fax_from
@@ -182,21 +186,37 @@ subquestion: |
 mandatory: True
 field: advise_client
 ---
-id: client info
+id: Client info
 question: |
   Client Information
+subquestion: | 
+  provide the following:
 fields:
-  - Client First Name: client.name.first
-  - Client Last Name: client.name.last
+  - First Name: client.name.first
+  - Last Name: client.name.last
   - Client Birthday: client.dob
     datatype: date
 ---
-id: Legal Guardian information
+id: supervisor info
 question: |
+  Supervisor information
+subquestion: | 
+  Provide the following:
+fields:
+  - First Name: supervisor.name.first
+  - Last Name: supervisor.name.last
+  - Email: supervisor.email
+continue button field: supervisor_info
+---
+id: Legal Guardian information
+question: | 
   Legal Guardian Information
+subquestion: | 
+  provide the following:
 fields:
   - First name: parent.name.first
   - Last name: parent.name.last
+continue button field: guardian_info
 ---
 #id: preview JDC_HIPAA_Improved
 #question: |
@@ -214,16 +234,30 @@ fields:
   #Remember to come back to this window to continue and sign your form.
 #continue button field: JDC_HIPAA_Improved_preview_question    
 ---
+id: supervisor signature
+question: |
+  Sign your forms
+signature: ${ supervisor.signature }
+under: |
+  ${ supervisor.name }
+---
+id: student signature
+question: |
+  Sign your forms
+signature: ${ studentattorney.signature }
+under: |
+  ${ studentattorney.name }
+---
 id: client signature
 question: |
-  Please have ${ client.name.first } sign their name below.
-signature: client_signature
+  ${ client.name.first }, sign below.
+signature: ${ client.signature }
 under: |
   ${ client.name }
 ---
 question: |
   Please have ${ parent.name.first } sign their name below.
-signature: parent_signature
+signature: ${ parent.signature }
 under: |
   ${ parent.name }
 ---
@@ -377,7 +411,7 @@ code: |
   got_result = True                    
 ---
 id: fax endscreen
-reload: True
+reload: 5
 question: |
   This is the end screen.
 subquestion: |
