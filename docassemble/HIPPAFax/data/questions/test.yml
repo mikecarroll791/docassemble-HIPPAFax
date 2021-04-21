@@ -92,7 +92,6 @@ comment: |
 mandatory: True
 code: |
   JDC_HIPAA_Improved_intro
-  Screen_Suffolk_University_HIPAA_App
   signature_date
   studentattorney.name.first
   supervisor.name.first
@@ -109,7 +108,7 @@ code: |
   parent.signature
   studentattorney.signature
   supervisor.signature
-  if go_to_fax
+  if Screen_Suffolk_University_HIPAA_App
     advise_client
     hospital.name
     fax_from
@@ -527,23 +526,6 @@ continue button label: SEND FAX
 code: | 
     fax_package = pdf_concatenate(Fax_cover_sheet_attachment, JDC_HIPAA_Improved_attachment, filename="fax_package.pdf")
 ---
-mandatory: True
-question: Your document is ready.
-email template: hello_email
-email address default: |
-  ${ user_email }
-attachment:
-  - name: A hello world document
-    filename: Hello_World
-    description: |
-      A document with a classic message
-    content: |
-      Hello, world!
-    valid formats:
-      - pdf
-      - docx
-always include editable files: True
----
 id: intake forms complete
 mandatory: True
 question: |
@@ -555,4 +537,29 @@ subquestion: |
 attachment code: |
   [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
 continue button field: intake_finished
+---
+id: what next
+question: |
+  What do you want to do?
+field: what_next
+choices:
+  - Go to completed intake forms
+  - Fax HIPAA release
+  - Exit application
+---
+mandatory: True
+code: |
+  if what_next == 'Go to completed intake forms':
+    intake_finished
+  if what_next == 'Fax HIPAA release':
+    Screen_Suffolk_University_HIPAA_App
+  if what_next == 'Exit application':
+    exit_screen
+---
+id: exit screen
+questtion: |
+  This is the end
+subquestion: |
+  Come back soon
+event: exit_screen
 ---
