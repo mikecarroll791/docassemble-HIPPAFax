@@ -96,23 +96,28 @@ code: |
   signature_date
   studentattorney.name.first
   supervisor.name.first
-  advise_client
   client.name.first
+  client_address
+  docket_number
+  school_discipline_case
   parent.name.first
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
   #JDC_HIPAA_Improved_preview_question
   basic_questions_signature_flow = False
-  client.signature
+  parent_preview
   parent.signature
   studentattorney.signature
   supervisor.signature
-  go_to_fax
-  hospital.name
-  fax_from
-  got_result
-  all_done
-  display_fax_results
+  if go_to_fax
+    advise_client
+    hospital.name
+    fax_from
+    got_result
+    all_done
+    display_fax_results
+  else 
+    intake_finished  
   #JDC_HIPAA_Improved_download
 ---
 id: basic questions intro screen
@@ -182,7 +187,7 @@ id: end of representation
 question: |
   HIPAA form is effective through the end of representation.
 subquestion: |
-  Advise ${client.name} this form is valid through the end of Suffolk Juvenile Defender Clinic's representation. 
+  *Advise ${client.name}* this form is valid through the end of Suffolk Juvenile Defender Clinic's representation. 
 mandatory: True
 field: advise_client
 ---
@@ -196,6 +201,19 @@ fields:
   - Last Name: client.name.last
   - Client Birthday: client.dob
     datatype: date
+---
+mandatory: True
+code: |
+  if user_logged_in():
+    goodbye_page
+  else:
+    sign_in_page
+---
+question: |
+  Please sign in
+buttons:
+  - Sign in: signin
+sets: sign_in_page
 ---
 id: supervisor info
 question: |
@@ -212,7 +230,7 @@ id: Legal Guardian information
 question: | 
   Legal Guardian Information
 subquestion: | 
-  provide the following:
+  Provide the following:
 fields:
   - First name: parent.name.first
   - Last name: parent.name.last
@@ -237,27 +255,29 @@ continue button field: guardian_info
 id: supervisor signature
 question: |
   Sign your forms
-signature: ${ supervisor.signature }
+signature: supervisor.signature 
 under: |
   ${ supervisor.name }
 ---
 id: student signature
 question: |
   Sign your forms
-signature: ${ studentattorney.signature }
+signature: studentattorney.signature 
 under: |
   ${ studentattorney.name }
 ---
 id: client signature
 question: |
   ${ client.name.first }, sign below.
-signature: ${ client.signature }
+signature: client.signature 
 under: |
   ${ client.name }
+continue button field: parent_preview
 ---
+id: parent signature
 question: |
   Please have ${ parent.name.first } sign their name below.
-signature: ${ parent.signature }
+signature: parent.signature 
 under: |
   ${ parent.name }
 ---
@@ -355,6 +375,59 @@ attachment:
       - "todays.date": ${ today() }
       # It's a signature: test which file version this is; leave empty unless it's the final version)
       - "client.signature": ${ client.signature }
+---
+id: client address
+continue button field: client_address
+question: |
+  Client Address
+subquestion: |
+  Provide the following
+fields:
+      - Client address: client.address.street 
+      - Client city: client.address.city 
+      - Client zip: client.address.zip 
+      - Client state: client.address.state 
+---
+id: docket number
+continue button field: docket_number
+question: |
+  Docket Number
+subquestion: |
+  Provide the following
+fields:
+  - Docket Number: docket_one 
+    required: false
+  - "Do you represent your client in more than one matter?": more_than_one
+    datatype: yesnoradio
+    required: false
+  - Second Docket Number: docket_two 
+    show if: more_than_one
+    required: false
+  - "Do you represent your client in any other matters?": another_one
+    datatype: yesnoradio
+    show if: more_than_one
+    required: false
+  - Third docket number: docket_three 
+    show if: another_one
+    required: false
+  - "Do you represent your client in any other matters?": and_another_one
+    datatype: yesnoradio
+    required: false
+    show if: another_one
+  - Fourth docket number: docket_four
+    show if: and_another_one
+    required: false
+---
+continue button field: school_discipline_case
+id: school discipline
+question: | 
+  School case?
+fields:
+  - "Will you be representing your client in a school discipline case?": has_school_case
+    datatype: yesnoradio
+    required: false
+  - Case number: school_case
+    show if: has_school_case
 ---
 attachment:
   variable name: Authorization_For_Representation_attachment
@@ -471,14 +544,15 @@ attachment:
       - docx
 always include editable files: True
 ---
+id: intake forms complete
 mandatory: True
 question: |
-  Here are your documents!
+  Here are your forms
 subquestion: |
   ${JDC_HIPAA_Improved_attachment}
   
   ${Authorization_For_Representation_attachment}
 attachment code: |
   [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
-continue button field: go_to_fax
+continue button field: intake_finished
 ---
