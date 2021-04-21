@@ -82,8 +82,6 @@ code: |
   users[0].address.adress = False
   users[0].address.city = False
   users[0].address.zip = False
-  Screen_Suffolk_University_HIPAA_App
-  advise_client
 ---
 ###################### Main order ######################
 comment: |
@@ -108,15 +106,20 @@ code: |
   parent.signature
   studentattorney.signature
   supervisor.signature
-  if Screen_Suffolk_University_HIPAA_App
+  intake_finished
+  if 
+    Screen_Suffolk_University_HIPAA_App
     advise_client
     hospital.name
     fax_from
     got_result
     all_done
     display_fax_results
-  else 
-    intake_finished  
+    what_next
+  else: 
+    intake_finished
+    what_next
+  exit_screen
   #JDC_HIPAA_Improved_download
 ---
 id: basic questions intro screen
@@ -557,9 +560,7 @@ code: |
     exit_screen
 ---
 id: exit screen
-questtion: |
+question: |
   This is the end
-subquestion: |
-  Come back soon
 event: exit_screen
 ---
