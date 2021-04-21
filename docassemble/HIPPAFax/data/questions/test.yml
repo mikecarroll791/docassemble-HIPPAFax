@@ -98,6 +98,7 @@ code: |
   client_address
   docket_number
   school_discipline_case
+  showed_disclosure
   parent.name.first
   # Save anonymized interview statistics (customize the saved data below)
   store_variables_snapshot(data={'zip': users[0].address.zip})
@@ -109,6 +110,7 @@ code: |
   supervisor.signature
   what_next
   if use_fax:
+    fax_app
     advise_client
     hospital.name
     fax_from
@@ -118,6 +120,7 @@ code: |
     what_next
   else: 
     intake_finished
+    saw_intake_forms
     what_next
   exit_screen
   #JDC_HIPAA_Improved_download
@@ -395,17 +398,17 @@ attachment:
 ---
 id: Appearance Disclosure
 question: |
- S.J.C. RULE 3:03 DISCLOSURE
+ **S.J.C. RULE 3:03 DISCLOSURE**
 subquestion: |
-  I understand that my counsel is a law student enrolled in the Juvenile Defenders Clinic, and further understand that another attorney will be appointed to me instead if I so desire. I authorize {studentattorney.name} and any successor student attorneys of the Suffolk University Law School Clinical Programs to represent me in the above-entitled case.
+  *I understand that my counsel is a law student enrolled in the Juvenile Defenders Clinic, and further understand that another attorney will be appointed to me instead if I so desire. I authorize {studentattorney.name} and any successor student attorneys of the Suffolk University Law School Clinical Programs to represent me in the above-entitled case.*
 continue button field: showed_disclosure
 fields:
-  - To continue, you must acknowledge client has reviewed this disclosure: acknowledged_disclosure
+  - To continue, acknowledge client recieved disclosure: acknowledged_disclosure
     datatype: checkboxes
     none of the above: False    
     minlength: 1
     choices:
-      - Client recieved disclosure
+      - "**Client recieved disclosure**"
     validation messages:
       minlength: |
         You cannot continue unless you acknowledge your client has acknowledged this disclousre   
@@ -421,6 +424,7 @@ fields:
       - Client city: client.address.city 
       - Client zip: client.address.zip 
       - Client state: client.address.state 
+# create github issue to add address autofil
 ---
 id: docket number
 continue button field: docket_number
@@ -430,27 +434,22 @@ subquestion: |
   Provide the following
 fields:
   - Docket Number: docket_one 
-    required: false
   - "Do you represent your client in more than one matter?": more_than_one
     datatype: yesnoradio
-    required: false
   - Second Docket Number: docket_two 
     show if: more_than_one
-    required: false
   - "Do you represent your client in any other matters?": another_one
     datatype: yesnoradio
     show if: more_than_one
     required: false
   - Third docket number: docket_three 
     show if: another_one
-    required: false
   - "Do you represent your client in any other matters?": and_another_one
     datatype: yesnoradio
-    required: false
     show if: another_one
+    required: false
   - Fourth docket number: docket_four
     show if: and_another_one
-    required: false
 ---
 continue button field: school_discipline_case
 id: school discipline
@@ -564,18 +563,31 @@ code: |
 id: intake forms complete
 mandatory: True
 question: |
-  Here are your forms
+  Your intake forms are ready
 subquestion: |
+  Click on a form to view it
+  
   ${JDC_HIPAA_Improved_attachment}
   
   ${Authorization_For_Representation_attachment}
-attachment code: |
-  [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
+  
+  ${Notice_of_Appearance_and_Disclosure_attachment}
 field: intake_finished
+continue button label: Get my forms 
+---
+id: use forms
+question: |
+  Download or email your intake forms
+attachment code: |
+  [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment, Notice_of_Appearance_and_Disclosure_attachment] 
+continue button label: Done
+field: saw_intake_forms
 ---
 id: what next
 question: |
-  The intake interview is finished. What do you want to do?
+  **Intake interview is finished** 
+subquestion: |
+  What do you want to do
 field: what_next
 choices:
   - View completed intake forms
@@ -584,7 +596,7 @@ choices:
 ---
 mandatory: True
 code: |
-  if what_next == 'Go to completed intake forms':
+  if what_next == 'View completed intake forms':
     intake_finished
   if what_next == 'Fax HIPAA release':
     Screen_Suffolk_University_HIPAA_App
