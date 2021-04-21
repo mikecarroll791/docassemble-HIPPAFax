@@ -106,9 +106,8 @@ code: |
   parent.signature
   studentattorney.signature
   supervisor.signature
-  intake_finished
-  if 
-    Screen_Suffolk_University_HIPAA_App
+  what_next
+  if use_fax:
     advise_client
     hospital.name
     fax_from
@@ -165,16 +164,16 @@ right: |
 ---
 id: Screen Suffolk University HIPAA App
 question: |
-  Screen Suffolk University HIPAA App
+  Suffolk University HIPAA App
 subquestion: |
-  This interview will allow your clients to complete this form electronically, and will automatically email you a copy of the completed HIPAA form. When you are done, you can use this app to fax the form to supported hospitals. 
+  Fax your HIPAA release form to the hospital. 
   
-  Student Attorney’s are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
-  
-  
-  These forms are pursuant to HIPAA Standards of April 14, 2003 (See 45 CFR 164.508(c))
-mandatory: True
-continue button field: Screen_Suffolk_University_HIPAA_App
+  Student Attorneys are responsible for protecting client information at all times. Suffolk University Law School is not liable for any misuse of this application and releases all liability to any claims that may arise from using this tool.
+fields:
+  - "Would you like to send a fax?": use_fax
+    datatype: yesnoradio 
+    required: false
+continue button field: fax_app
 ---
 question: |
   Student Attorney Information
@@ -515,8 +514,8 @@ code: |
 question: |
   **WARNING:** You are about to send a fax. 
 subquestion: |
-  # Your fax will be sent to ${hospital.name} at:
-  *${hospital.fax}.*
+  # Your fax will be sent to ${hospital.name} at fax number:
+  *${hospital.fax}*
   
   Click on the attached file and review the accuracy of all information before proceeding. 
   
@@ -543,10 +542,10 @@ continue button field: intake_finished
 ---
 id: what next
 question: |
-  What do you want to do?
+  The intake interview is finished. What do you want to do?
 field: what_next
 choices:
-  - Go to completed intake forms
+  - View completed intake forms
   - Fax HIPAA release
   - Exit application
 ---
