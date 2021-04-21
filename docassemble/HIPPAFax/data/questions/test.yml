@@ -82,6 +82,7 @@ code: |
   users[0].address.adress = False
   users[0].address.city = False
   users[0].address.zip = False
+  goodbye_page = False
 ---
 ###################### Main order ######################
 comment: |
@@ -538,7 +539,7 @@ subquestion: |
   ${Authorization_For_Representation_attachment}
 attachment code: |
   [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
-continue button field: intake_finished
+field: intake_finished
 ---
 id: what next
 question: |
