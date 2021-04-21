@@ -5,6 +5,7 @@ objects:
   - client: Individual
   - parent: Individual
   - hospital: DAObject
+  - fax: Individual
 ---
 include:
   - docassemble.AssemblyLine:al_package.yml
@@ -104,6 +105,7 @@ code: |
   parent_signature
   go_to_fax
   hospital.name
+  fax_from
   got_result
   all_done
   display_fax_results
@@ -113,7 +115,7 @@ id: basic questions intro screen
 decoration: form-lineal
 continue button field: JDC_HIPAA_Improved_intro
 question: |
-  Sign/Submit Your Client’s HIPAA Release Form: Court Forms Online
+  Sign and Submit Your Client’s HIPAA Release Form: Court Forms Online
 subquestion: |
 
   The Court Forms Online Project can help you complete and fax your client's HIPAA form in 3 steps:
@@ -174,9 +176,9 @@ objects:
 ---
 id: end of representation 
 question: |
-  This form is effective through the end of representation.
+  HIPAA form is effective through the end of representation.
 subquestion: |
-  Advise your client this form is valid through the end of representation. 
+  Advise ${client.name} this form is valid through the end of Suffolk Juvenile Defender Clinic's representation. 
 mandatory: True
 field: advise_client
 ---
@@ -189,9 +191,9 @@ fields:
   - Client Birthday: client.dob
     datatype: date
 ---
-id: Parent/Guardian info
+id: Legal Guardian information
 question: |
-  Parent/Guardian Information
+  Legal Guardian Information
 fields:
   - First name: parent.name.first
   - Last name: parent.name.last
@@ -273,6 +275,35 @@ objects:
   - al_user_bundle: ALDocumentBundle.using(elements=[JDC_HIPAA_Improved_attachment], filename="JDC_HIPAA_Improved.pdf", title="All forms to download for your records")
   - al_court_bundle: ALDocumentBundle.using(elements=[JDC_HIPAA_Improved_attachment], filename="JDC_HIPAA_Improved.pdf", title="All forms to download for your records")
 ---
+id:  Fax cover sheet data
+question: |
+  Fax Cover Sheet
+subquestion: |
+  The information below will be included on the cover sheet of your fax to the hopsital
+fields: 
+  - From fax number: fax_from
+  - From phone number: fax_phone
+  - Fax subject: fax_subject
+  - Fax comment: fax_comment
+---
+id: Fax cover sheet attachment
+attachment:
+  variable name: Fax_cover_sheet_attachment
+  name: Fax_cover_sheet_attachment
+  filename: Fax_cover_sheet
+  skip undefined: True
+  pdf template file: Fax_cover_sheet.pdf
+  fields:
+      - "hospital.name": ${ hospital.name }
+      - "studentattorney.name": ${ studentattorney.name }
+      - "hospital.fax": ${ hospital.fax }
+      - "fax_from": ${ fax_from }
+      - "fax_phone": ${ fax_phone }
+      - "hospital.phone": ${ hospital.phone }
+      - "todays.date": ${ today() }
+      - "fax_subject": ${ fax_subject }
+      - "fax_comment": ${ fax_comment }
+---
 attachment:
   variable name: JDC_HIPAA_Improved_attachment
   name: JDC_HIPAA_Improved_attachment
@@ -330,7 +361,7 @@ objects:
 code: |
   data = {'media_url': "https://apps-dev.suffolklitlab.org/data/templates/JDC_HIPAA_Improved.pdf ",
     'connection_id': '1584353915762115606', 
-    'to': 'hospital.fax', 
+    'to': hospital_fax_formatted, 
     'from': '+18332979197'}
   headers = {'Authorization': 'Bearer KEY0177F9770F9DA6B296C4098DDA8A8B99_EksqAtVPNAEp4XGMflLPuT',
              'Content-Type': 'application/x-www-form-urlencoded'
@@ -345,8 +376,10 @@ code: |
     result = e.response_json
   got_result = True                    
 ---
+id: fax endscreen
+reload: True
 question: |
-  This is the end screen
+  This is the end screen.
 subquestion: |
 
   **Below is the response you receieved from the FAX API. "Fax Status:  Queued" indicates the request was successful and the app is working properly**
@@ -354,6 +387,7 @@ subquestion: |
   ${ result }
 event: all_done
 ---
+id:  Hospital Information
 question: |
   Hospital Information
 fields:
@@ -364,15 +398,22 @@ fields:
   - Hospital fax number: hospital.fax
 ---
 code: |
-  phone_number_in_e164(hospital.fax)
+  hospital_fax_formatted = phone_number_in_e164(hospital.fax)
 ---
-continue button field: got_result
+code: |
+  country: US
+--- 
 question: |
-  Your Forms are ready to fax.
+  **WARNING:** You are about to send a fax. 
 subquestion: |
-  When you are ready to Fax them, press
-  Continue. 
-  **WARNING** pressing continue will send the fax to the phone number you entered as the hospital phone number. Verify the accuracy of all information entered before proceeding.
+  Your fax  will be sent to ${hospital.fax}. Click on the attached file and review the accuracy of all information before proceeding.
+
+  ${fax_package}
+field: got_result
+continue button label: SEND FAX
+---
+code: | 
+    fax_package = pdf_concatenate(Fax_cover_sheet_attachment, JDC_HIPAA_Improved_attachment, filename="fax_package.pdf")
 ---
 mandatory: True
 question: Your document is ready.
@@ -402,6 +443,11 @@ content: |
 mandatory: True
 question: |
   Here are your documents!
+subquestion: |
+  ${JDC_HIPAA_Improved_attachment}
+  
+  ${Authorization_For_Representation_attachment}
 attachment code: |
   [JDC_HIPAA_Improved_attachment, Authorization_For_Representation_attachment] 
 continue button field: go_to_fax
+---
